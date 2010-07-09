@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<balbec>
+	<nagios>
+		<ndo2db>
+			<database>nagios</database>
+			<hostname>mysql.bes-intern.com</hostname>
+			<username>nagios</username>
+			<prefix>nagios</prefix>
+		</ndo2db>
+		<url>bla</url>
+	</nagios>
+	<map name="infrastructure">
+		<hostgroup>cabinet-7</hostgroup>
+		<hostgroup>cabinet-6</hostgroup>
+		<hostgroup>cabinet-5</hostgroup>
+		<hostgroup>cabinet-4</hostgroup>
+		<hostgroup>cabinet-3</hostgroup>
+		<hostgroup>cabinet-2</hostgroup>
+		<hostgroup>cabinet-1</hostgroup>
+		<hostgroup>pile</hostgroup>
+		<hostgroup>vm</hostgroup>
+		<hostgroup>external</hostgroup>
+		<filter revert="true">infrastructure</filter>
+		<filter revert="true">infrastructure_misc</filter>
+	</map>
+	<map name="demo">
+		<hostgroup>cabinet-7</hostgroup>
+		<hostgroup>cabinet-6</hostgroup>
+		<hostgroup>cabinet-5</hostgroup>
+		<hostgroup>cabinet-4</hostgroup>
+		<hostgroup>cabinet-3</hostgroup>
+		<hostgroup>cabinet-2</hostgroup>
+		<hostgroup>cabinet-1</hostgroup>
+		<hostgroup>pile</hostgroup>
+		<hostgroup>vm</hostgroup>
+		<hostgroup>external</hostgroup>
+		<filter revert="true">demo</filter>
+        </map>
+
+	<map name="other">
+		<hostgroup>cabinet-7</hostgroup>
+		<hostgroup>cabinet-6</hostgroup>
+		<hostgroup>cabinet-5</hostgroup>
+		<hostgroup>cabinet-4</hostgroup>
+		<hostgroup>cabinet-3</hostgroup>
+		<hostgroup>cabinet-2</hostgroup>
+		<hostgroup>cabinet-1</hostgroup>
+		<hostgroup>pile</hostgroup>
+		<hostgroup>vm</hostgroup>
+		<hostgroup>external</hostgroup>
+		<filter>infrastructure</filter>
+		<filter>infrastructure_misc</filter>
+		<filter>demo</filter>
+	</map>
+</balbec>
