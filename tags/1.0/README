@@ -1,0 +1,29 @@
+Balbec
+
+Nagios visualization tool.
+
+2010 Magnus Kulke
+
+Requirements:
+
+- nagios
+- ndo2db with mysql
+- mod-wsgi for apache
+- python-mysql
+- python-lxml
+
+Installation:
+
+- If not yet present add a wsgi option "WSGIPythonPath /opt/wsgi" to the apache configuration.
+- Move all files in "src/" to "/opt/wsgi/nagvis".
+- Move "nagvis.wsgi", "config.xml", "xslt/" & "schema/" to "/opt/nagvis".
+- Adjust settings in "config.xml".
+
+Configuration:
+
+- see example config.xml file.
+- a map includes several hostgroups and optionalal several filter hostgroups.
+- setting the filter attribute "revert" to "true", makes the result include only the hosts in the filter hostgroups, by default those are filtered out.
+- reverted filters are combined using "or", normal filters with "and".  
+
+
