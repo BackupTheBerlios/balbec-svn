@@ -7,20 +7,32 @@ from balbec.xmlhandler import XmlHandler
 
 class HtmlHandler(XmlHandler):
 
-    def __init__(self, documentRoot):
+	def __init__(self, documentRoot):
 
-        self.documentRoot = documentRoot
+		self.documentRoot = documentRoot
 
-    def html(self):
+	def readUrlPrefix(self):
+	
+		configFile = open(self.documentRoot+'/config.xml', 'r')
+		doc = etree.parse(configFile)
+		
+		urlNode = doc.xpath("/balbec/nagios/url_prefix")[0]
+		return urlNode.text
 
-        xml = self.xml()
+	def html(self):
 
-        stylesheetFile = open(self.documentRoot+'/xslt/html.xsl', 'r')
-        stylesheetDoc = etree.parse(stylesheetFile)
-        stylesheet = etree.XSLT(stylesheetDoc)
-        
-        stringIO = StringIO(xml)
-        doc = etree.parse(stringIO)
-        result = stylesheet(doc)
-
-        return str(result)
+		xml = self.xml()
+		
+		urlPrefix = self.readUrlPrefix()
+		
+		stylesheetFile = open(self.documentRoot+'/xslt/html.xsl', 'r')
+		stylesheetDoc = etree.parse(stylesheetFile)
+		urlPrefixNode = stylesheetDoc.xpath('/xsl:stylesheet/xsl:variable', namespaces = {'xsl' : 'http://www.w3.org/1999/XSL/Transform'})[0]
+		urlPrefixNode.text = urlPrefix
+		stylesheet = etree.XSLT(stylesheetDoc)
+		
+		stringIO = StringIO(xml)
+		doc = etree.parse(stringIO)
+		result = stylesheet(doc)
+		
+		return str(result)

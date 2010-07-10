@@ -7,7 +7,7 @@
 			<username>nagios</username>
 			<prefix>nagios</prefix>
 		</ndo2db>
-		<url>bla</url>
+		<url_prefix>http://nagios/nagios/cgi-bin/status.cgi?host=</url_prefix>
 	</nagios>
 	<map name="infrastructure">
 		<hostgroup>cabinet-7</hostgroup>

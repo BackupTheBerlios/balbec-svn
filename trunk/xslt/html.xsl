@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<xsl:variable name="url_prefix">http://nagios/nagios/cgi-bin/status.cgi?host=</xsl:variable>
 	<xsl:template match="/">
-		<html><head><title>nagvis</title><META HTTP-EQUIV="refresh" CONTENT="120;URL=/"/></head>
+		<html><head><title>Balbec</title><META HTTP-EQUIV="refresh" CONTENT="120;URL=/"/></head>
 			<body onload="toggleMap('test')">
 				<xsl:attribute name="onload">toggleMap('<xsl:value-of select="/nagios/map[1]/@name"/>')</xsl:attribute>
 				<script type="text/javascript">
@@ -97,7 +98,7 @@
 												<td>
 													<xsl:element name="a">
 														<xsl:attribute name="href">
-															http://nagios/nagios/cgi-bin/status.cgi?host=<xsl:value-of select="@name"/>
+															<xsl:value-of select="$url_prefix"/><xsl:value-of select="@name"/>
 														</xsl:attribute>
 														<xsl:value-of select="@name"/>
 													</xsl:element>

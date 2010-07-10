@@ -67,7 +67,7 @@ class XmlHandler:
         prefixNodes = mysqlNode.xpath('prefix')
         if len(prefixNodes) == 1 and prefixNodes[0] != None:
 
-            mysql.prefix = prefixNodes[0].text    
+            mysql.prefix = prefixNodes[0].text    	
   
         mapNames = []
         mapNodes = doc.xpath("/balbec/map")
