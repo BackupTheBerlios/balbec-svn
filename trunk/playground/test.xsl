@@ -85,6 +85,44 @@
 		</table>
 	</xsl:template>
 
+	<!--All valid hostgroup options.-->
+
+	<xsl:template match="nag:hostgroup">
+		<table width="100%" style="white-space:nowrap;border-style:solid;border-width:thin;border-color:black;background:lightgray;">
+			<tr>
+				<td width="1%">
+					<xsl:choose>
+						<xsl:when test="nag:identifier">
+							<xsl:attribute name="onclick">toggleAttributes('<xsl:value-of select="nag:identifier/*[1]"/>')</xsl:attribute>
+							<xsl:attribute name="id"><xsl:value-of select="nag:identifier/*[1]"/>.toggler</xsl:attribute>
+						</xsl:when>
+						<xsl:when test="nag:template_identifier">
+							<xsl:attribute name="onclick">toggleAttributes('<xsl:value-of select="nag:template_identifier/*[1]"/>')</xsl:attribute>
+							<xsl:attribute name="id"><xsl:value-of select="nag:template_identifier/*[1]"/>.toggler</xsl:attribute>
+						</xsl:when>
+					</xsl:choose>
+					<xsl:attribute name="onmouseover">this.style.cursor='pointer';</xsl:attribute>
+					<xsl:attribute name="style">font-family:monospace;</xsl:attribute>
+					<xsl:text>+</xsl:text>
+				</td>
+				<td>
+					<xsl:choose>
+						<xsl:when test="nag:identifier"><xsl:value-of select="nag:identifier/*[1]"/></xsl:when>
+						<xsl:when test="nag:template_identifier"><xsl:value-of select="nag:template_identifier/*[1]"/></xsl:when>
+					</xsl:choose>
+				</td>
+			</tr>
+			<xsl:apply-templates select="nag:identifier"/>
+			<xsl:apply-templates select="nag:template_identifier"/>
+			<xsl:apply-templates select="nag:template_reference"/>
+			<xsl:apply-templates select="nag:register">
+				<xsl:with-param name="encode" select="'true'"/>
+			</xsl:apply-templates>
+			<xsl:apply-templates select="nag:reference"/>
+			<xsl:apply-templates select="nag:alias"/>
+		</table>
+	</xsl:template>
+
 	<!--Strip identifier & reference tags.-->
 
 	<xsl:template match="nag:identifier">
@@ -373,7 +411,7 @@
 		<head><title>nagios html test</title></head>
 		<body>
 			<table style="border-style:none;">
-				<xsl:for-each select="nag:host">
+				<xsl:for-each select="./*">
 					<tr><td><xsl:apply-templates select="."/></td></tr>
 				</xsl:for-each>
 			</table>
