@@ -24,7 +24,6 @@
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:register">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:reference">
@@ -43,26 +42,21 @@
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:active_checks_enabled">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:passive_checks_enabled">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:obsess_over_host">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:check_freshness">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:freshness_threshold">
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:event_handler_enabled">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:low_flap_threshold">
@@ -72,34 +66,27 @@
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:flap_detection_enabled">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:process_perf_data">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>				
 			<xsl:apply-templates select="nag:retain_status_information">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>	
 			<xsl:apply-templates select="nag:retain_nonstatus_information">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>		
 			<xsl:apply-templates select="nag:notification_interval">
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:notification_options">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>	
 			<xsl:apply-templates select="nag:notifications_enabled">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>	
 			<xsl:apply-templates select="nag:stalking_options">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 		</table>
@@ -123,7 +110,6 @@
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:register">
-				<xsl:with-param name="encode" select="'true'"/>
 				<xsl:with-param name="identifier" select="$identifier"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="nag:reference">
@@ -163,6 +149,7 @@
 			<td>
 				<xsl:value-of select="$identifier"/>
 			</td>
+			<td></td>
 		</tr>
 	</xsl:template>
 
@@ -239,7 +226,6 @@
 		</xsl:apply-templates>
 		<xsl:apply-templates select="nag:members">
 			<xsl:with-param name="identifier" select="$identifier"/>
-			<xsl:with-param name="encode" select="'true'"/>
 		</xsl:apply-templates>	
 		<xsl:apply-templates select="nag:notification_period">
 			<xsl:with-param name="identifier" select="$identifier"/>
@@ -279,157 +265,83 @@
 
 	<xsl:template match="nag:*">
 
-		<xsl:param name="encode"/>
 		<xsl:param name="identifier"/>
-
-		<!-- If the preceding sibling is the same name, is has already been treated.-->
 		
-		<xsl:if test="name(preceding-sibling::*[1]) != name()">
-			<tr>
-				<xsl:attribute name="style">display:none;</xsl:attribute>
-				<xsl:attribute name="class">
-					<xsl:value-of select="$identifier"/>
-					<xsl:text>.attribute</xsl:text>	
-				</xsl:attribute>	
-				<td></td>				
-				<td>
-					<!--Print the option, which is the node name w/o the "nag:" prefix. 2d & 3d_coords have to be renamed, since xml tags starting with numbers are not legal.-->
-		
-					<xsl:variable name="tagname" select="local-name()"/>
-					<xsl:choose>
-						<xsl:when test="$tagname = 'coords_2d'">
-							<xsl:text>2d_coords</xsl:text>
-						</xsl:when>		
-						<xsl:when test="$tagname = 'coords_3d'">
-							<xsl:text>3d_coords</xsl:text>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="$tagname"/>
-						</xsl:otherwise>	
-					</xsl:choose>	
-					<xsl:text>: </xsl:text>
+		<tr>
+			<xsl:attribute name="style">display:none;</xsl:attribute>
+			<xsl:attribute name="class">
+				<xsl:value-of select="$identifier"/>
+				<xsl:text>.attribute</xsl:text>	
+			</xsl:attribute>	
+			<td></td>				
+			<xsl:choose>
 
-					<!--If the encode flag is set the encode template is called for printing.-->
+				<!-- If the preceding sibling has the same name, omit the name.-->
 
-					<xsl:choose>
-						<xsl:when test="$encode">
-							<xsl:call-template name="encode">
-								<xsl:with-param name="argument" select="."/>
-							</xsl:call-template>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:value-of select="."/>			
-						</xsl:otherwise>
-					</xsl:choose>
+				<xsl:when test="name(preceding-sibling::*[1]) != name()">
 
-					<!-- Treat following sibling w/ the same name.-->	
+					<td>
 
-					<xsl:variable name="currentname" select="local-name()"/>
-					<xsl:for-each select="./following-sibling::*[local-name() = $currentname]">
-						<xsl:text>, </xsl:text>
+						<!--Print the option, which is the node name w/o the "nag:" prefix. 2d & 3d_coords have to be renamed, since xml tags starting with numbers are not legal.-->
+
+						<xsl:variable name="tagname" select="local-name()"/>
 						<xsl:choose>
-							<xsl:when test="$encode">
-								<xsl:call-template name="encode">
-									<xsl:with-param name="argument" select="."/>
-								</xsl:call-template>
+							<xsl:when test="$tagname = 'coords_2d'">
+								<xsl:text>2d_coords</xsl:text>
+							</xsl:when>		
+							<xsl:when test="$tagname = 'coords_3d'">
+								<xsl:text>3d_coords</xsl:text>
 							</xsl:when>
 							<xsl:otherwise>
-								<xsl:value-of select="."/>			
-							</xsl:otherwise>
-						</xsl:choose>
-					</xsl:for-each>
+								<xsl:value-of select="$tagname"/>
+							</xsl:otherwise>	
+						</xsl:choose>	
+						<xsl:text>: </xsl:text>
+					</td>
+				</xsl:when>
+				<xsl:otherwise><td></td></xsl:otherwise>
+			</xsl:choose>
+			<td>
+				<xsl:value-of select="."/>
+				<!--If there neighbours which are called argument#, append them to the element string.-->
 
-					<!--If there neighbours which are called argument#, append them to the element string.-->
-
-					<xsl:for-each select="../*[starts-with(name(),'nag:argument')]">
-						<xsl:text>!</xsl:text>
-						<xsl:value-of select="."/>
-					</xsl:for-each>
-				</td>
-			</tr>
-		</xsl:if>
+				<xsl:for-each select="../*[starts-with(name(),'nag:argument')]">
+					<xsl:text>!</xsl:text>
+					<xsl:value-of select="."/>
+				</xsl:for-each>
+			</td>
+		</tr>
 	</xsl:template>
 
-	<!--Template to decode values.-->
+<xsl:template name="javascript">
+	function toggleAttributes(identifier) {
 
-	<xsl:template name="encode">
-		<xsl:param name="argument"/>
+		var all = document.getElementsByTagName('*');
+		for (var i = 0; i &lt; all.length; i++) {
+			
+			elem = all[i];
+			if (elem.className &amp;&amp; elem.className == identifier+'.attribute') {
 
-		<xsl:choose>
-			<xsl:when test="$argument = 'critical'">
-				<xsl:text>c</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'down'">
-				<xsl:text>d</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'false'">
-				<xsl:text>0</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'flapping'">
-				<xsl:text>f</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'none'">
-				<xsl:text>n</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'ok' or $argument = 'up'">
-				<xsl:text>o</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'pending'">
-				<xsl:text>p</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'recovery'">
-				<xsl:text>r</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'scheduled downtime'">
-				<xsl:text>s</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'true'">
-				<xsl:text>1</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'unreachable' or $argument = 'unknown'">
-				<xsl:text>u</xsl:text>
-			</xsl:when>
-			<xsl:when test="$argument = 'warning'">
-				<xsl:text>w</xsl:text>
-			</xsl:when>
-			<xsl:when test="nag:host">
-				<xsl:value-of select="nag:host"/>
-				<xsl:text>,</xsl:text>
-				<xsl:value-of select="nag:service"/>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="$argument"/>
-			</xsl:otherwise>
-		</xsl:choose>	
-	</xsl:template>
+				var toggler = document.getElementById(identifier+'.toggler');
+
+				if (elem.style.display == '')  {
+		
+					elem.style.display = 'none';
+					toggler.innerHTML = '+';
+				} else {
+
+					elem.style.display = '';
+					toggler.innerHTML = '-';
+				}
+			}
+		}
+	}	
+</xsl:template>
 
 <xsl:template match="/nag:configuration">
 	<html>
 		<script type="text/javascript">
-			<xsl:text>
-				function toggleAttributes(identifier) {
-
-					var all = document.getElementsByTagName('*');
-					for (var i = 0; i &lt; all.length; i++) {
-						
-						elem = all[i];
-						if (elem.className &amp;&amp; elem.className == identifier+'.attribute') {
-			
-							var toggler = document.getElementById(identifier+'.toggler');
-
-							if (elem.style.display == '')  {
-					
-								elem.style.display = 'none';
-								toggler.innerHTML = '+';
-							} else {
-
-								elem.style.display = '';
-								toggler.innerHTML = '-';
-							}
-						}
-					}
-				}				
-			</xsl:text>		
+			<xsl:call-template name="javascript"/>	
 		</script>
 		<head><title>nagios html test</title></head>
 		<body>
