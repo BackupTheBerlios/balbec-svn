@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <balbec>
 	<nagios>
-		<ndo2db>
-			<database>nagios</database>
-			<hostname>mysql.bes-intern.com</hostname>
-			<username>nagios</username>
-			<prefix>nagios</prefix>
-		</ndo2db>
+        <!-- define either ndo2db *or* nagios files as data source -->
+	    <!--<ndo2db>
+		    <database>nagios</database>
+		    <hostname>mysql.bes-intern.com</hostname>
+		    <username>nagios</username>
+	    </ndo2db>-->
+        <files>
+            <object_file>/opt/nagios/var/objects.cache</object_file>
+            <status_file>/opt/nagios/var/status.dat</status_file>
+        </files>
 		<url_prefix>http://nagios/nagios/cgi-bin/status.cgi?host=</url_prefix>
 	</nagios>
 	<map name="infrastructure">

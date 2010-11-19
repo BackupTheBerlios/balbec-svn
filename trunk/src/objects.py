@@ -31,7 +31,6 @@ class Hostgroup:
 		self.name = name
 		self.hostObjectIds = []
 		self.hosts = []
-
 	def addHostObjectId(self, id):
 
 		self.hostObjectIds.append(id)

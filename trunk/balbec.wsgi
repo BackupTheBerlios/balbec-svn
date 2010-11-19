@@ -6,7 +6,12 @@ from balbec.htmlhandler import HtmlHandler
 
 def application(environ, start_response):
 
-    accept = environ['HTTP_ACCEPT']
+    try:
+	
+        accept = environ['HTTP_ACCEPT']
+    except KeyError:
+
+        accept = 'text/xml'
     documentRoot = environ['DOCUMENT_ROOT']
 
     try:

@@ -4,7 +4,6 @@
 from lxml import etree
 import re
 import datetime
-from balbec.mysql import MySql
 from balbec.objects import Map, Hostgroup, Filter
 
 HOST_UP = 0
@@ -29,8 +28,7 @@ class XmlHandler:
     def readConfig(self):
 
         maps = []
-        mysql = MySql()
-        
+
         schemaFile = open(self.documentRoot+'/schema/config.xsd', 'r')
         schemaDoc = etree.parse(schemaFile)
         schema = etree.XMLSchema(schemaDoc)
@@ -46,29 +44,47 @@ class XmlHandler:
 
             raise Exception('Invalid Config file: "'+str(e)+'"')
 
-        mysqlNode = doc.xpath("/balbec/nagios/ndo2db")[0]
+        mysqlNodes = doc.xpath("/balbec/nagios/ndo2db")
+        if len(mysqlNodes) == 1:
 
-        databaseNodes = mysqlNode.xpath('database')
-        if len(databaseNodes) == 1:
+            from balbec.mysqlhandler import MysqlHandler
 
-            mysql.database = databaseNodes[0].text
-        hostnameNodes = mysqlNode.xpath('hostname')
-        if len(hostnameNodes) == 1:
+            mysql = MysqlHandler()
 
-            mysql.hostname = hostnameNodes[0].text
-        usernameNodes = mysqlNode.xpath('username')
-        if len(usernameNodes) == 1:
+            mysqlNode = doc.xpath("/balbec/nagios/ndo2db")[0]
 
-            mysql.username = usernameNodes[0].text
-        passwordNodes = mysqlNode.xpath('password')
-        if len(passwordNodes) == 1 and passwordNodes[0] != None:
+            databaseNodes = mysqlNode.xpath('database')
+            if len(databaseNodes) == 1:
 
-            mysql.password = passwordNodes[0].text  
-        prefixNodes = mysqlNode.xpath('prefix')
-        if len(prefixNodes) == 1 and prefixNodes[0] != None:
+                mysql.database = databaseNodes[0].text
+            hostnameNodes = mysqlNode.xpath('hostname')
+            if len(hostnameNodes) == 1:
 
-            mysql.prefix = prefixNodes[0].text    	
-  
+                mysql.hostname = hostnameNodes[0].text
+            usernameNodes = mysqlNode.xpath('username')
+            if len(usernameNodes) == 1:
+
+                mysql.username = usernameNodes[0].text
+            passwordNodes = mysqlNode.xpath('password')
+            if len(passwordNodes) == 1 and passwordNodes[0] != None:
+
+                mysql.password = passwordNodes[0].text  
+            prefixNodes = mysqlNode.xpath('prefix')
+            if len(prefixNodes) == 1 and prefixNodes[0] != None:
+
+                mysql.prefix = prefixNodes[0].text
+
+            mysql.connect()
+            backend = mysql
+        else:
+
+            from balbec.filehandler import FileHandler
+
+            objectFilename = doc.xpath("/balbec/nagios/files/object_file")[0].text     	
+            statusFilename = doc.xpath("/balbec/nagios/files/status_file")[0].text     
+
+            backend = FileHandler(objectFilename, statusFilename)
+
         mapNames = []
         mapNodes = doc.xpath("/balbec/map")
         for mapNode in mapNodes:
@@ -105,22 +121,15 @@ class XmlHandler:
             map.filters = filters
             maps.append(map)
         
-        return maps, mysql
+        return maps, backend
 
-    def xml(self):
-        
-        maps, mysql = self.readConfig()
-        
-        mysql.connect()
+    def xml(self):       
 
-        dtString = mysql.getLastCheck()
-        dtNumbers = re.findall('(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)', dtString)[0]
-        dt= datetime.datetime(int(dtNumbers[0]), int(dtNumbers[1]), int(dtNumbers[2]), int(dtNumbers[3]), int(dtNumbers[4]), int(dtNumbers[5]))
-        lastCheck=dt.strftime('%s')
-        dtString = mysql.getCurrentDateTime()
-        dtNumbers = re.findall('(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)', dtString)[0]
-        dt= datetime.datetime(int(dtNumbers[0]), int(dtNumbers[1]), int(dtNumbers[2]), int(dtNumbers[3]), int(dtNumbers[4]), int(dtNumbers[5]))
-        currentTime=dt.strftime('%s')
+        maps, backend = self.readConfig()
+        dt = backend.getLastCheck()
+        lastCheck = dt.strftime('%s')
+        dt = backend.getCurrentDateTime()
+        currentTime=dt.strftime('%s')        
 
         nagiosNode = etree.Element('nagios', currentTime=str(currentTime), lastCheck=str(lastCheck))
 
@@ -133,9 +142,9 @@ class XmlHandler:
 
             for filter in filters:
             
-                filter.hostgroups = mysql.getHostgroups([filter.name])
-        
-            hostgroups = mysql.getHostgroups(names)
+                filter.hostgroups = backend.getHostgroups([filter.name])      
+
+            hostgroups = backend.getHostgroups(names)
 
             filteredHostgroups = []
 
@@ -187,7 +196,7 @@ class XmlHandler:
 
             for hostgroup in sortedHostgroups:
 
-                hostgroup.hosts = mysql.getHosts(hostgroup)
+                hostgroup.hosts = backend.getHosts(hostgroup)
                 hostgroupNode = etree.SubElement(mapNode, "hostgroup", name=hostgroup.name)
 
                 for host in hostgroup.hosts:
@@ -225,8 +234,6 @@ class XmlHandler:
                         codeNode.text = str(statusCode)
                         textNode = etree.SubElement(statusNode, "text")
                         textNode.text = str(statusText)       
-
-        mysql.disconnect()
       
         tree = etree.ElementTree(nagiosNode)
         return etree.tostring(tree, encoding='UTF-8', pretty_print=True, xml_declaration=True)
