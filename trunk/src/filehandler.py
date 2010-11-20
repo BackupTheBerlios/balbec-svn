@@ -6,18 +6,32 @@ from balbec.objects import Host, Hostgroup, Result, Service
 
 class FileHandler:
 
+    directive_counter = 0
+    host_counter = 0
+    hostgroup_counter = 0
+	
     def __init__(self, objectFilename, statusFilename):
 
-        self.objectFilename = objectFilename
-        self.statusFilename = statusFilename
+        # read file contents
 
-    def getDirective(self, item, directive):
+        try:
 
-        pat = re.compile(' '+ directive + '[\s= ]*([\S, ]*)\n')
-        m = pat.search(item)
-        if m:
+            file = open(statusFilename)
+            self.statusContent = file.read().replace("\t"," ")
+            file.close()
+        except IOError, e:
 
-            return m.group(1)
+            raise Exception("Couldn't fetch status information from file: "+str(
+e.args[1]))
+
+        try:
+
+            file = open(objectFilename)
+            self.objectContent = file.read().replace("\t"," ")
+            file.close()
+        except IOError, e:
+
+            raise Exception("Couldn't fetch object information from file: "+str(e.args[1]))
 
     def getCurrentDateTime(self):
 
@@ -25,26 +39,16 @@ class FileHandler:
 
     def getLastCheck(self):
 
-        # read file content
-
-        try:
-
-            file = open(self.statusFilename)
-            content = file.read().replace("\t"," ")
-            file.close()
-        except IOError, e:
-
-            raise Exception("Couldn't fetch status information from file: "+str(e.args[1]))
-
         # get last check time
 
-        regexp = 'programstatus'+' \{([\S\s]*?)\}'
+        regexp = 'programstatus \{([\S\s]*?last_command_check=(\S+)\n[\S\s]*?)\}'
         pat = re.compile(regexp, re.DOTALL)
-        definitions = pat.findall(content)
+        definitions = pat.findall(self.statusContent)
 
         try:
 
-            lastCheck = float(self.getDirective(definitions[0],"last_command_check").strip())
+            deftuple = definitions[0]
+            lastCheck = float(deftuple[1])
         except IndexError:
 
             raise Exception('No programstatus block found status file.')
@@ -53,88 +57,83 @@ class FileHandler:
 
     def getHostgroups(self, names):
 
-        try:
+        #self.hostgroup_counter = self.hostgroup_counter + 1
 
-            file = open(self.objectFilename)
-            content = file.read().replace("\t"," ")
-            file.close()
-        except IOError, e:
-
-            raise Exception("Couldn't fetch object information from file: "+str(e.args[1]))
-
-        regexp = 'define hostgroup'+' \{([\S\s]*?)\}'
+        regexp = 'define hostgroup \{([\S\s]*?hostgroup_name\s+([\S ]+)\n[\S\s]*?members\s+([\S ]+)\n[\S\s]*?)\}'
         pat = re.compile(regexp,re.DOTALL)
-        definitions = pat.findall(content)
+        definitions = pat.findall(self.objectContent)
 
         idHostgroupMap = {}
 
-        for definition in definitions:
+        for deftuple in definitions:
 
-            name = self.getDirective(definition, 'hostgroup_name').strip()
-            if name in names:
+            name = deftuple[1]
+          
+            if name not in names:
 
-                idHostgroupMap[name] = Hostgroup(name)
+                continue
 
-                memberString = self.getDirective(definition, 'members').strip()
-                members = memberString.split(',')
-                for member in members:
+            idHostgroupMap[name] = Hostgroup(name)
 
-                    idHostgroupMap[name].addHostObjectId(member)
+            memberString = deftuple[2]
+            members = memberString.split(',')
+            for member in members:
+
+               idHostgroupMap[name].addHostObjectId(member)
 
         return idHostgroupMap.values()
 
-    def getHosts(self, hostgroup = None):
+    def getHosts(self, hostgroup):
 
-        # read file content
+        #self.host_counter = self.host_counter + 1
 
-        try:
-
-            file = open(self.statusFilename)
-            content = file.read().replace("\t"," ")
-            file.close()
-        except IOError, e:
-
-            raise Exception("Couldn't fetch status information from file: "+str(e.args[1]))
+        regexp = 'hoststatus'+' \{([\S\s]*?host_name=(\S+)\n[\S\s]*?current_state=(\S+)\n[\S\s]*?plugin_output=([\S ]+)\n[\S\s]*?)\}' 
 
         # get hosts
 
         hosts = {}
-        regexp = 'hoststatus'+' \{([\S\s]*?)\}'
         pat = re.compile(regexp,re.DOTALL)
-        definitions = pat.findall(content)
+        definitions = pat.findall(self.statusContent)
 
-        for definition in definitions:
+        for deftuple in definitions:
 
-            hostname = self.getDirective(definition,"host_name").strip()
+            hostname = deftuple[1]
+            
+            if hostname not in hostgroup.hostObjectIds:
 
-            if hostgroup == None or hostname in hostgroup.hostObjectIds:
+                continue
+            definition = deftuple[0]
 
-                status = int(self.getDirective(definition,"current_state").strip())
-                output = self.getDirective(definition,"plugin_output").strip()
-                host = Host(hostname)
-                host.setResult(Result(status, output))
-                hosts[hostname] = host
+            status = int(deftuple[2])
+            output = deftuple[3]
+            #status = int(self.getDirective(definition,"current_state").strip())
+            #output = self.getDirective(definition,"plugin_output").strip()
+            host = Host(hostname)
+            host.setResult(Result(status, output))
+            hosts[hostname] = host
 
         # get services
 
-        services = {}
-        regexp = 'servicestatus'+' \{([\S\s]*?)\}'
+        regexp = 'servicestatus'+' \{([\S\s]*?host_name=(\S+)\n[\S\s]*?service_description=([\S ]+)\n[\S\s]*?current_state=(\S+)\n[\S\s]*?plugin_output=([\S ]+)\n[\S\s]*?)\}'
         pat = re.compile(regexp, re.DOTALL)
-        definitions = pat.findall(content)
+        definitions = pat.findall(self.statusContent)
 
-        for definition in definitions:
+        for deftuple in definitions:
 
-            hostname = self.getDirective(definition,"host_name").strip()
+            hostname = deftuple[1]
 
-            if hostgroup == None or hostname in hostgroup.hostObjectIds:
+            if hostname not in hostgroup.hostObjectIds:
 
-                description = self.getDirective(definition,"service_description").strip()
-                status = int(self.getDirective(definition,"current_state").strip())
-                output = self.getDirective(definition,"plugin_output").strip()
-                host = Host(hostname)
+                continue
+            definition = deftuple[0]
+           
+            description = deftuple[2] 
+            status = int(deftuple[3])
+            output = deftuple[4]
+            host = Host(hostname)
 
-                service = Service(description)
-                service.setResult(Result(status, output))
-                hosts[hostname].addService(service)
+            service = Service(description)
+            service.setResult(Result(status, output))
+            hosts[hostname].addService(service)
 
         return hosts.values();

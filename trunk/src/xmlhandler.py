@@ -196,6 +196,10 @@ class XmlHandler:
 
             for hostgroup in sortedHostgroups:
 
+                if len(hostgroup.hostObjectIds) == 0:
+
+                    continue 
+
                 hostgroup.hosts = backend.getHosts(hostgroup)
                 hostgroupNode = etree.SubElement(mapNode, "hostgroup", name=hostgroup.name)
 
@@ -236,4 +240,8 @@ class XmlHandler:
                         textNode.text = str(statusText)       
       
         tree = etree.ElementTree(nagiosNode)
+
+	#print 'directive counter:' + str(backend.directive_counter)
+	#print 'hostgroup counter:' + str(backend.hostgroup_counter)
+        #print 'host counter:' + str(backend.host_counter)
         return etree.tostring(tree, encoding='UTF-8', pretty_print=True, xml_declaration=True)
