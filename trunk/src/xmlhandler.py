@@ -47,9 +47,9 @@ class XmlHandler:
         mysqlNodes = doc.xpath("/balbec/nagios/ndo2db")
         if len(mysqlNodes) == 1:
 
-            from balbec.mysqlhandler import MysqlHandler
+            from balbec.mysqlbackend import MysqlBackend
 
-            mysql = MysqlHandler()
+            mysql = MysqlBackend()
 
             mysqlNode = doc.xpath("/balbec/nagios/ndo2db")[0]
 
@@ -78,12 +78,12 @@ class XmlHandler:
             backend = mysql
         else:
 
-            from balbec.filehandler import FileHandler
+            from balbec.filebackend import FileBackend
 
             objectFilename = doc.xpath("/balbec/nagios/files/object_file")[0].text     	
             statusFilename = doc.xpath("/balbec/nagios/files/status_file")[0].text     
 
-            backend = FileHandler(objectFilename, statusFilename)
+            backend = FileBackend(objectFilename, statusFilename)
 
         mapNames = []
         mapNodes = doc.xpath("/balbec/map")

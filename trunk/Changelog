@@ -1,3 +1,7 @@
+v1.2
+
+- parsing nagios files optimized (several seconds => 15ms)  
+
 v1.1:
 
 - Added file backend, ndo not needed anymore.

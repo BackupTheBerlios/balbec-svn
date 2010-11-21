@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from balbec.objects import Host, Hostgroup, Result, Service
 
-class MysqlHandler:
+class MysqlBackend:
 
     def __init__(self):
 
