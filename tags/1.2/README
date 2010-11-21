@@ -1,0 +1,34 @@
+Balbec
+
+Nagios visualization tool.
+
+2010 Magnus Kulke
+
+Requirements:
+
+- nagios
+- mod-wsgi for apache (configuration example in "apache/")
+- python-lxml
+
+Optional (when Balbec is not installed on the Nagios host):
+
+- ndo2db with mysql (see the documentation included in ndoutils on how to set up NDO)
+- python-mysql
+
+Installation:
+
+- If not yet present add a wsgi option "WSGIPythonPath /opt/wsgi" to the apache configuration.
+- Move all files in "src/" to "/opt/wsgi/balbec".
+- Move "balbec.wsgi", "config.xml", "xslt/" & "schema/" to "/opt/balbec".
+- Adjust settings in "config.xml".
+
+Configuration:
+
+- see example config.xml file.
+- a map includes several hostgroups and optionalal several filter hostgroups.
+- setting the filter attribute "revert" to "true", makes the result include only the hosts in the filter hostgroups, by default those are filtered out.
+- reverted filters are combined using "or", normal filters with "and".  
+
+Usage:
+
+Use the browser to view the maps in html ("Accept: text/html" in the header) or use xml for further processing: "curl -s http://balbec". 
