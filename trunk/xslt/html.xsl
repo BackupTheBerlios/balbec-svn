@@ -2,7 +2,7 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:variable name="url_prefix">http://nagios/nagios/cgi-bin/status.cgi?host=</xsl:variable>
 	<xsl:template match="/">
-		<html><head><title>Balbec</title><META HTTP-EQUIV="refresh" CONTENT="120;URL=/"/></head>
+		<html><head><title>Balbec v1.2</title><META HTTP-EQUIV="refresh" CONTENT="120;URL=/"/></head>
 			<body onload="toggleMap('test')">
 				<xsl:attribute name="onload">toggleMap('<xsl:value-of select="/nagios/map[1]/@name"/>')</xsl:attribute>
 				<script type="text/javascript">
