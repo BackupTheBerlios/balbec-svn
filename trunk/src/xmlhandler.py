@@ -4,7 +4,7 @@
 from lxml import etree
 import re
 import datetime
-from balbec.objects import Map, Hostgroup, Filter
+from balbec.objects import Map, Hostgroup, Filter, NotExpression, AndExpression, HostgroupExpression
 
 HOST_UP = 0
 HOST_DOWN = 1
@@ -80,7 +80,7 @@ class XmlHandler:
 
             from balbec.filebackend import FileBackend
 
-            objectFilename = doc.xpath("/balbec/nagios/files/object_file")[0].text     	
+            objectFilename = doc.xpath("/balbec/nagios/files/object_file")[0].text      
             statusFilename = doc.xpath("/balbec/nagios/files/status_file")[0].text     
 
             backend = FileBackend(objectFilename, statusFilename)
@@ -100,29 +100,85 @@ class XmlHandler:
             map = Map(mapName) 
 
             hostgroups = []
-            filters =  []
+            
+            expressions = self.buildExpression(mapNode)
+            #self.printExpressions(expressions)
 
-            hostgroupNodes = mapNode.xpath("hostgroup")
-            for hostgroupNode in hostgroupNodes:
-
-                name = hostgroupNode.text
-                hostgroups.append(name)
-
-            filterNodes = mapNode.xpath("filter")
-
-            for filterNode in filterNodes:
-
-                name = filterNode.text
-                filter = Filter(name)   
-                filter.revert = (filterNode.get('revert') == 'true') 
-                filters.append(filter)
-
-            map.hostgroups = hostgroups
-            map.filters = filters
+            map.expressions = expressions
             maps.append(map)
         
         return maps, backend
 
+    def buildExpression(self, node):
+    
+            expressions = []
+    
+            hostgroupNodes = node.xpath("hostgroup")
+            for hostgroupNode in hostgroupNodes:
+
+                name = hostgroupNode.text
+                expressions.append(HostgroupExpression(name))
+            andNodes = node.xpath("and")
+            for andNode in andNodes:
+
+                andExpressions = self.buildExpression(andNode)
+                expressions.append(AndExpression(andExpressions))
+            notNodes = node.xpath("not")
+            for notNode in notNodes:
+
+                notExpressions = self.buildExpression(notNode)
+                expressions.append(NotExpression(notExpressions))    
+                
+            return expressions
+
+    def printExpressions(self, expressions):
+    
+        for expression in expressions:
+        
+            if isinstance(expression, AndExpression):
+            
+                print '&('
+                self.printExpressions(expression.expressions)
+                print ')'
+            elif isinstance(expression, NotExpression):
+            
+                print '!('
+                self.printExpressions(expression.expressions)
+                print ')'
+            elif isinstance(expression, HostgroupExpression):
+            
+                print '|' + expression.name
+
+    def getFilteredObjectIds(self, backend, expressions):
+    
+        hostgroupNames = []
+        andIds = None
+        notIds = None
+        for expression in expressions:
+        
+            if isinstance(expression, AndExpression):
+            
+                andIds = self.getFilteredObjectIds(backend, expression.expressions)
+            elif isinstance(expression, NotExpression):
+            
+                notIds = self.getFilteredObjectIds(backend, expression.expressions)
+            elif isinstance(expression, HostgroupExpression):
+            
+                hostgroupNames.append(expression.name)
+        allIds = []
+        hostgroups = backend.getHostgroups(hostgroupNames)
+        for hostgroup in hostgroups:
+        
+            allIds = allIds + hostgroup.hostObjectIds
+        
+        ids = []
+        for id in allIds:
+        
+            if (andIds == None or id in andIds) and (notIds == None or id not in notIds):
+            
+                ids.append(id)
+        return ids
+        
     def xml(self):       
 
         maps, backend = self.readConfig()
@@ -135,71 +191,44 @@ class XmlHandler:
 
         for map in maps:
         
-            mapNode = etree.SubElement(nagiosNode, 'map', name=map.name)
+            mapNode = etree.SubElement(nagiosNode, 'map', name = map.name)
 
-            names = map.hostgroups
-            filters = map.filters
+            expressions = map.expressions
 
-            for filter in filters:
+			# Use the expressions from the config file to compile a list of 
+			# valid object ids.
             
-                filter.hostgroups = backend.getHostgroups([filter.name])      
+            filteredHostObjectIds = self.getFilteredObjectIds(backend, expressions)
 
-            hostgroups = backend.getHostgroups(names)
+			# Get the hostgroups for the map.
 
-            filteredHostgroups = []
+            hostgroupNames = []
+            for expression in expressions:
+            
+                if isinstance(expression, HostgroupExpression):
+                
+                    hostgroupNames.append(expression.name)
+            hostgroups = backend.getHostgroups(hostgroupNames)
 
             for hostgroup in hostgroups:
 
-                filteredHostgroup = Hostgroup(hostgroup.name)
+				# Remove a hostgroup's object ids, when they are not in the
+				# valid object id list.
 
-                for id in hostgroup.hostObjectIds:
-
-                    if len(filters) != 0:
+                hostObjectIds = hostgroup.hostObjectIds
+                newHostObjectIds = []
+                for hostObjectId in hostObjectIds:
+                
+                    if hostObjectId in filteredHostObjectIds:
                     
-                        include = filter.revert != True
-                    
-                        for filter in filters:
-                        
-                            for filterHostgroup in filter.hostgroups:
-                    
-                                if id in filterHostgroup.hostObjectIds:
-                                
-                                    if filter.revert:
-                                    
-                                        include = include or True
-                                    else:
-                                    
-                                        include = include and False	
-                                else:
-                                
-                                    if filter.revert == False:
-        
-                                        include = include and True	
-                        if include:
-                        
-                            filteredHostgroup.hostObjectIds.append(id)
-                    else:
-                    
-                        filteredHostgroup.hostObjectIds.append(id)
-                filteredHostgroups.append(filteredHostgroup)
+                        newHostObjectIds.append(hostObjectId)
+                hostgroup.hostObjectIds = newHostObjectIds
 
-            # resort names
-
-            sortedHostgroups = []
-            for name in names:
-
-                for filteredHostgroup in filteredHostgroups:
-
-                    if filteredHostgroup.name == name:
-
-                        sortedHostgroups.append(filteredHostgroup)
-
-            for hostgroup in sortedHostgroups:
+				# Skip if the hostgroup has no (valid) object ids.
 
                 if len(hostgroup.hostObjectIds) == 0:
 
                     continue 
-
                 hostgroup.hosts = backend.getHosts(hostgroup)
                 hostgroupNode = etree.SubElement(mapNode, "hostgroup", name=hostgroup.name)
 
@@ -237,11 +266,10 @@ class XmlHandler:
                         codeNode = etree.SubElement(statusNode, "code")
                         codeNode.text = str(statusCode)
                         textNode = etree.SubElement(statusNode, "text")
-                        textNode.text = str(statusText)       
-      
+                        textNode.text = str(statusText)
+            
         tree = etree.ElementTree(nagiosNode)
-
-	#print 'directive counter:' + str(backend.directive_counter)
-	#print 'hostgroup counter:' + str(backend.hostgroup_counter)
-        #print 'host counter:' + str(backend.host_counter)
         return etree.tostring(tree, encoding='UTF-8', pretty_print=True, xml_declaration=True)
+        
+      
+        
