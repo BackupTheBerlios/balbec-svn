@@ -24,8 +24,10 @@
 		<hostgroup>pile</hostgroup>
 		<hostgroup>vm</hostgroup>
 		<hostgroup>external</hostgroup>
-		<filter revert="true">infrastructure</filter>
-		<filter revert="true">infrastructure_misc</filter>
+		<and>
+		    <hostgroup>infrastructure</hostgroup>
+		    <hostgroup>infrastructure_misc</hostgroup>
+		</and>
 	</map>
 	<map name="demo">
 		<hostgroup>cabinet-7</hostgroup>
@@ -38,8 +40,10 @@
 		<hostgroup>pile</hostgroup>
 		<hostgroup>vm</hostgroup>
 		<hostgroup>external</hostgroup>
-		<filter revert="true">demo</filter>
-        </map>
+		<and>
+		    <hostgroup>demo</hostgroup>
+		</and>
+    </map>
 
 	<map name="other">
 		<hostgroup>cabinet-7</hostgroup>
@@ -52,8 +56,10 @@
 		<hostgroup>pile</hostgroup>
 		<hostgroup>vm</hostgroup>
 		<hostgroup>external</hostgroup>
-		<filter>infrastructure</filter>
-		<filter>infrastructure_misc</filter>
-		<filter>demo</filter>
+		<not>
+            <hostgroup>infrastructure</hostgroup>
+            <hostgroup>infrastructure_misc</hostgroup>
+            <hostgroup>demo</hostgroup>
+		</not>
 	</map>
 </balbec>

@@ -8,6 +8,7 @@ import SimpleHTTPServer
 import SocketServer
 import os
 import sys
+import signal
 import socket
 
 PORT = 8100
@@ -41,15 +42,30 @@ class BalbecServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.wfile.write(output)
         except Exception, e:
             
-            send_response(503, 'Service Unavailable')
+            print e
+            self.send_response(503, 'Service Unavailable')
 
-Handler = BalbecServer
+handler = BalbecServer
+
+#handler = XmlHandler(CWD)
+#output = handler.xml() 
 
 try:
 
-    httpd = SocketServer.TCPServer(("", PORT), Handler)
+    httpd = SocketServer.TCPServer(("", PORT), handler)
+    
+    def signal_handler(signal, frame):
+
+        httpd.socket.close()
+        print "Balbec http server stopped."
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
     httpd.serve_forever()
 except socket.error, e:
 
     print "Error:", e[1]
     sys.exit(1)
+
