@@ -14,20 +14,22 @@
 		<url_prefix>http://nagios/nagios/cgi-bin/status.cgi?host=</url_prefix>
 	</nagios>
 	<map name="infrastructure">
-		<hostgroup>cabinet-7</hostgroup>
-		<hostgroup>cabinet-6</hostgroup>
-		<hostgroup>cabinet-5</hostgroup>
-		<hostgroup>cabinet-4</hostgroup>
-		<hostgroup>cabinet-3</hostgroup>
-		<hostgroup>cabinet-2</hostgroup>
-		<hostgroup>cabinet-1</hostgroup>
-		<hostgroup>pile</hostgroup>
-		<hostgroup>vm</hostgroup>
-		<hostgroup>external</hostgroup>
-		<and>
-		    <hostgroup>infrastructure</hostgroup>
-		    <hostgroup>infrastructure_misc</hostgroup>
-		</and>
+	    <hostgroup>pile</hostgroup>
+	    <or>
+		    <hostgroup>cabinet-7</hostgroup>
+		    <hostgroup>cabinet-6</hostgroup>
+		    <hostgroup>cabinet-5</hostgroup>
+		    <hostgroup>cabinet-4</hostgroup>
+		    <hostgroup>cabinet-3</hostgroup>
+		    <hostgroup>cabinet-2</hostgroup>
+		    <hostgroup>cabinet-1</hostgroup>
+		    <hostgroup>vm</hostgroup>
+		    <hostgroup>external</hostgroup>
+		    <and>
+		        <hostgroup show="false">infrastructure</hostgroup>
+		        <hostgroup show="false">infrastructure_misc</hostgroup>
+		    </and>
+        </or>
 	</map>
 	<map name="demo">
 		<hostgroup>cabinet-7</hostgroup>
@@ -41,10 +43,9 @@
 		<hostgroup>vm</hostgroup>
 		<hostgroup>external</hostgroup>
 		<and>
-		    <hostgroup>demo</hostgroup>
+		    <hostgroup show="false">demo</hostgroup>
 		</and>
     </map>
-
 	<map name="other">
 		<hostgroup>cabinet-7</hostgroup>
 		<hostgroup>cabinet-6</hostgroup>
@@ -57,9 +58,9 @@
 		<hostgroup>vm</hostgroup>
 		<hostgroup>external</hostgroup>
 		<not>
-            <hostgroup>infrastructure</hostgroup>
-            <hostgroup>infrastructure_misc</hostgroup>
-            <hostgroup>demo</hostgroup>
+            <hostgroup show="false">infrastructure</hostgroup>
+            <hostgroup show="false">infrastructure_misc</hostgroup>
+            <hostgroup show="false">demo</hostgroup>
 		</not>
 	</map>
 </balbec>

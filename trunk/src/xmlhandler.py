@@ -4,7 +4,7 @@
 from lxml import etree
 import re
 import datetime
-from balbec.objects import Map, Hostgroup, Filter, NotExpression, AndExpression, HostgroupExpression
+from balbec.objects import Map, Hostgroup, Operation, GroupObject
 
 HOST_UP = 0
 HOST_DOWN = 1
@@ -101,83 +101,116 @@ class XmlHandler:
 
             hostgroups = []
             
-            expressions = self.buildExpression(mapNode)
-            #self.printExpressions(expressions)
+            expression = self.buildExpression(mapNode)
+            #self.printExpression(expression)
 
-            map.expressions = expressions
+            map.expression = expression
             maps.append(map)
         
         return maps, backend
 
     def buildExpression(self, node):
     
-            expressions = []
+            expression = []
     
             hostgroupNodes = node.xpath("hostgroup")
             for hostgroupNode in hostgroupNodes:
 
                 name = hostgroupNode.text
-                expressions.append(HostgroupExpression(name))
+                show = not (len(hostgroupNode.xpath("@show")) > 0 and hostgroupNode.xpath("@show")[0] == "false")               
+                expression.append(GroupObject(name, show, GroupObject.HOSTGROUP))
             andNodes = node.xpath("and")
             for andNode in andNodes:
 
-                andExpressions = self.buildExpression(andNode)
-                expressions.append(AndExpression(andExpressions))
+                andExpression = self.buildExpression(andNode)
+                expression.append(Operation(andExpression, Operation.AND))
+            orNodes = node.xpath("or")
+            for orNode in orNodes:
+
+                orExpression = self.buildExpression(orNode)
+                expression.append(Operation(orExpression, Operation.OR))
             notNodes = node.xpath("not")
             for notNode in notNodes:
 
-                notExpressions = self.buildExpression(notNode)
-                expressions.append(NotExpression(notExpressions))    
+                notExpression = self.buildExpression(notNode)
+                expression.append(Operation(notExpression, Operation.NOT))    
                 
-            return expressions
+            return expression
 
-    def printExpressions(self, expressions):
+    def printExpression(self, expression):
     
-        for expression in expressions:
+        for part in expression:
         
-            if isinstance(expression, AndExpression):
+            if isinstance(part, Operation):
             
-                print '&('
-                self.printExpressions(expression.expressions)
+                symbols = ['&', '!', '|']
+                print symbols[part.type] + '('
+                self.printExpression(part.expression)
                 print ')'
-            elif isinstance(expression, NotExpression):
+            elif isinstance(part, GroupObject):
             
-                print '!('
-                self.printExpressions(expression.expressions)
-                print ')'
-            elif isinstance(expression, HostgroupExpression):
-            
-                print '|' + expression.name
+                print '|' + part.name + ', show: ' + str(part.show)
 
-    def getFilteredObjectIds(self, backend, expressions):
-    
-        hostgroupNames = []
-        andIds = None
-        notIds = None
-        for expression in expressions:
+    def getFilteredGroups(self, backend, expression):
         
-            if isinstance(expression, AndExpression):
-            
-                andIds = self.getFilteredObjectIds(backend, expression.expressions)
-            elif isinstance(expression, NotExpression):
-            
-                notIds = self.getFilteredObjectIds(backend, expression.expressions)
-            elif isinstance(expression, HostgroupExpression):
-            
-                hostgroupNames.append(expression.name)
-        allIds = []
-        hostgroups = backend.getHostgroups(hostgroupNames)
-        for hostgroup in hostgroups:
+        # select groups first
         
-            allIds = allIds + hostgroup.hostObjectIds
+        assembledGroups = []
         
-        ids = []
-        for id in allIds:
-        
-            if (andIds == None or id in andIds) and (notIds == None or id not in notIds):
+        def isGroupObject(x): return isinstance(x, GroupObject)
+        groupObjects = filter(isGroupObject, expression)
+        for groupObject in groupObjects: 
+                
+            groups = backend.getHostgroups([groupObject.name])
+            for group in groups: 
             
-                ids.append(id)
-        return ids
+                if groupObject.show == True: group.show = True
+            assembledGroups.extend(groups)
+        
+        # get hostgroups from OR clauses
+        
+        def isOrOperation(x): return isinstance(x, Operation) and x.type == Operation.OR
+        operations = filter(isOrOperation, expression)
+        for operation in operations:
+            
+            groups = self.getFilteredGroups(backend, operation.expression)
+            assembledGroups.extend(groups)
+                
+        # build object id list from assembled groups        
+                
+        objectIds = []
+        for group in assembledGroups: objectIds.extend(group.hostObjectIds)
+                
+        # get hostgroups from AND clauses and filter hosts out                
+                      
+        def isAndOperation(x): return isinstance(x, Operation) and x.type == Operation.AND
+        operations = filter(isAndOperation, expression)
+        for operation in operations:
+
+            andIds = []
+            groups = self.getFilteredGroups(backend, operation.expression)
+            for group in groups: andIds.extend(group.hostObjectIds)                
+            def andFilter(x): return x in andIds
+            objectIds = filter(andFilter, objectIds)
+
+        # get hostgroups from NOT clauses and filter hosts out                
+                        
+        def isNotOperation(x): return isinstance(x, Operation) and x.type == Operation.NOT
+        operations = filter(isNotOperation, expression)
+        for operation in operations:
+
+            notIds = []
+            groups = self.getFilteredGroups(backend, operation.expression)     
+            for group in groups: notIds.extend(group.hostObjectIds)              
+            def notFilter(x): return x not in notIds
+            objectIds = filter(notFilter, objectIds)                    
+        
+        # allow only those hosts which are in objectIds
+        
+        def andFilter(x): return x in objectIds
+        for group in assembledGroups: group.hostObjectIds = filter(andFilter, group.hostObjectIds) 
+        
+        return assembledGroups
         
     def xml(self):       
 
@@ -192,40 +225,14 @@ class XmlHandler:
         for map in maps:
         
             mapNode = etree.SubElement(nagiosNode, 'map', name = map.name)
-
-            expressions = map.expressions
-
-			# Use the expressions from the config file to compile a list of 
-			# valid object ids.
             
-            filteredHostObjectIds = self.getFilteredObjectIds(backend, expressions)
-
-			# Get the hostgroups for the map.
-
-            hostgroupNames = []
-            for expression in expressions:
-            
-                if isinstance(expression, HostgroupExpression):
-                
-                    hostgroupNames.append(expression.name)
-            hostgroups = backend.getHostgroups(hostgroupNames)
+            hostgroups = self.getFilteredGroups(backend, map.expression)
 
             for hostgroup in hostgroups:
 
-				# Remove a hostgroup's object ids, when they are not in the
-				# valid object id list.
-
-                hostObjectIds = hostgroup.hostObjectIds
-                newHostObjectIds = []
-                for hostObjectId in hostObjectIds:
+                if hostgroup.show == False:
                 
-                    if hostObjectId in filteredHostObjectIds:
-                    
-                        newHostObjectIds.append(hostObjectId)
-                hostgroup.hostObjectIds = newHostObjectIds
-
-				# Skip if the hostgroup has no (valid) object ids.
-
+                    continue
                 if len(hostgroup.hostObjectIds) == 0:
 
                     continue 

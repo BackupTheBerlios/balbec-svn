@@ -14,25 +14,29 @@ class Map:
     def __init__(self, name):
 
         self.name = name
-        self.expressions = []
-        
-class HostgroupExpression:
+        self.expression = []
 
-    def __init__(self, name):
+class GroupObject:
+
+    HOSTGROUP = 0
+    SERVICEGROUP = 1
+    
+    def __init__(self, name, show, type):
     
         self.name = name
-
-class AndExpression:
-
-    def __init__(self, expressions):
+        self.show = show
+        self.type = type    
     
-        self.expressions = expressions
+class Operation:
 
-class NotExpression:
-
-    def __init__(self, expressions):
-
-        self.expressions = expressions
+    AND = 0
+    NOT = 1
+    OR = 2
+    
+    def __init__(self, expression, type):
+    
+        self.expression = expression
+        self.type = type
 
 class Result:
 
@@ -48,6 +52,7 @@ class Hostgroup:
         self.name = name
         self.hostObjectIds = []
         self.hosts = []
+        self.show = True
     def addHostObjectId(self, id):
 
         self.hostObjectIds.append(id)

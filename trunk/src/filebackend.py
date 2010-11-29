@@ -104,6 +104,7 @@ e.args[1]))
             definitions.append((hostname, description, status, output))
         return definitions
 
+
     def getHostgroups(self, names):
 
         idHostgroupMap = {}

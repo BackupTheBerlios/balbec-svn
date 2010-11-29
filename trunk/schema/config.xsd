@@ -28,19 +28,25 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+    <xsd:complexType name="group" mixed="true">
+        <xsd:attribute name="show" type="xsd:string"/>
+    </xsd:complexType>
+
     <xsd:complexType name="objects_and_operators">
         <xsd:choice maxOccurs="unbounded" minOccurs="1">
-            <xsd:element name="hostgroup" type="xsd:string"/>
+            <xsd:element name="hostgroup" type="group"/>
             <xsd:element name="and" type="objects_and_operators"/>
             <xsd:element name="not" type="objects_and_operators"/>
+            <xsd:element name="or" type="objects_and_operators"/>
         </xsd:choice>
     </xsd:complexType>
 
     <xsd:complexType name="map">
         <xsd:choice maxOccurs="unbounded" minOccurs="1">
-            <xsd:element name="hostgroup" type="xsd:string"/>
+            <xsd:element name="hostgroup" type="group"/>
             <xsd:element name="and" type="objects_and_operators"/>
             <xsd:element name="not" type="objects_and_operators"/>
+            <xsd:element name="or" type="objects_and_operators"/>
         </xsd:choice>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
     </xsd:complexType>
