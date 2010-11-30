@@ -57,6 +57,19 @@ class Hostgroup:
 
         self.hostObjectIds.append(id)
 
+class Servicegroup:
+
+    def __init__(self, name):
+
+        self.name = name
+        self.hostObjectIds = []
+        self.hosts = []
+        self.show = True
+        self.hostServiceObjectIds = {}
+    def addHostObjectId(self, id):
+
+        self.hostObjectIds.append(id)
+
 class Host:
 
     def __init__(self, hostname):

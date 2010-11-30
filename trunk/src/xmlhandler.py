@@ -119,6 +119,12 @@ class XmlHandler:
                 name = hostgroupNode.text
                 show = not (len(hostgroupNode.xpath("@show")) > 0 and hostgroupNode.xpath("@show")[0] == "false")               
                 expression.append(GroupObject(name, show, GroupObject.HOSTGROUP))
+            servicegroupNodes = node.xpath("servicegroup")
+            for servicegroupNode in servicegroupNodes:
+
+                name = servicegroupNode.text
+                show = not (len(servicegroupNode.xpath("@show")) > 0 and servicegroupNode.xpath("@show")[0] == "false")               
+                expression.append(GroupObject(name, show, GroupObject.SERVICEGROUP))           
             andNodes = node.xpath("and")
             for andNode in andNodes:
 
@@ -161,7 +167,8 @@ class XmlHandler:
         groupObjects = filter(isGroupObject, expression)
         for groupObject in groupObjects: 
                 
-            groups = backend.getHostgroups([groupObject.name])
+            if groupObject.type == GroupObject.HOSTGROUP: groups = backend.getHostgroups([groupObject.name])
+            elif groupObject.type == GroupObject.SERVICEGROUP: groups = backend.getServicegroups([groupObject.name])
             for group in groups: 
             
                 if groupObject.show == True: group.show = True
@@ -226,22 +233,25 @@ class XmlHandler:
         
             mapNode = etree.SubElement(nagiosNode, 'map', name = map.name)
             
-            hostgroups = self.getFilteredGroups(backend, map.expression)
+            groups = self.getFilteredGroups(backend, map.expression)
+            #hostgroups = self.getFilteredGroups(backend, map.expression)
 
-            for hostgroup in hostgroups:
+            for group in groups:
 
-                if hostgroup.show == False:
+                if group.show == False:
                 
                     continue
-                if len(hostgroup.hostObjectIds) == 0:
+                if len(group.hostObjectIds) == 0:
 
-                    continue 
-                hostgroup.hosts = backend.getHosts(hostgroup)
-                hostgroupNode = etree.SubElement(mapNode, "hostgroup", name=hostgroup.name)
+                    continue
+                group.hosts = backend.getHosts(group)
+                
+                if isinstance(group, Hostgroup): groupNode = etree.SubElement(mapNode, "hostgroup", name=group.name)
+                else: groupNode = etree.SubElement(mapNode, "servicegroup", name=group.name)
 
-                for host in hostgroup.hosts:
+                for host in group.hosts:
 
-                    hostNode = etree.SubElement(hostgroupNode, "host", name=host.hostname)
+                    hostNode = etree.SubElement(groupNode, "host", name=host.hostname)
                     if host.result:
 
                         statusText = hostStatus[host.result.status]
@@ -251,11 +261,13 @@ class XmlHandler:
                         statusText = serviceStatus[SERVICE_UNKNOWN]
                         statusCode = SERVICE_UNKNOWN
 
-                    statusNode = etree.SubElement(hostNode, "status")
-                    codeNode = etree.SubElement(statusNode, "code")
-                    codeNode.text = str(statusCode)
-                    textNode = etree.SubElement(statusNode, "text")
-                    textNode.text = str(statusText)
+                    if isinstance(group, Hostgroup):
+                    
+                        statusNode = etree.SubElement(hostNode, "status")
+                        codeNode = etree.SubElement(statusNode, "code")
+                        codeNode.text = str(statusCode)
+                        textNode = etree.SubElement(statusNode, "text")
+                        textNode.text = str(statusText)
 
                     for service in host.services:
 

@@ -4,7 +4,7 @@
 import MySQLdb
 import re
 from datetime import datetime
-from balbec.objects import Host, Hostgroup, Result, Service
+from balbec.objects import Host, Hostgroup, Servicegroup, Result, Service
 
 class MysqlBackend:
 
@@ -66,6 +66,16 @@ class MysqlBackend:
 		    self.connection.close()
 		    raise Exception("Could not fetch current date and time from database: "+str(e.args[1]))
 
+    def getServicegroups(self, names):
+    
+        if len(names) == 0:
+
+		    return []
+		    raise Exception("List of hostgroup names invalid or empty.")
+		try:
+		
+		
+
     def getHostgroups(self, names):
 
 	    if len(names) == 0:
@@ -118,29 +128,20 @@ class MysqlBackend:
 		    self.connection.close()
 		    raise Exception("Couldn't fetch hostgroup information from database: "+str(e.args[1]))
 
-    def getHosts(self, hostgroup = None):
+    def getHosts(self, group):
 	
 	    try:
 		    cursor = self.connection.cursor()
 
 		    hosts = {}
 
-		    if hostgroup == None:
 
-			    # get a list of all hosts
-			
-			    cursor.execute("SELECT host_object_id, display_name FROM '+self.prefix+'_hosts")
+            if len(group.hostObjectIds) == 0: return hosts
 
-		    else:
+            # get a list of all hosts in hostgroup
 
-			    if len(hostgroup.hostObjectIds) == 0:
-
-				    return hosts
-	
-			    # get a list of all hosts in hostgroup
-
-			    whereClause = '") OR (host_object_id="'.join(hostgroup.hostObjectIds)
-			    cursor.execute('SELECT host_object_id, display_name FROM '+self.prefix+'_hosts WHERE (host_object_id="'+whereClause+'")')	
+            whereClause = '") OR (host_object_id="'.join(group.hostObjectIds)
+            cursor.execute('SELECT host_object_id, display_name FROM '+self.prefix+'_hosts WHERE (host_object_id="'+whereClause+'")')	
 
 		    rows = cursor.fetchall()
 		    for row in rows:
@@ -149,14 +150,16 @@ class MysqlBackend:
 	
 		    # get host results
 		
-		    whereClause = '") OR (host_object_id="'.join(hosts.keys())
-		    cursor.execute('SELECT host_object_id, current_state, output FROM '+self.prefix+'_hoststatus WHERE(host_object_id="'+whereClause+'")')
+		    if isinstance(group, Hostgroup):
 		
-		    rows = cursor.fetchall()
-		    for row in rows:
-
-			    result = Result(row[1], row[2])
-			    hosts[str(row[0])].setResult(result)
+                whereClause = '") OR (host_object_id="'.join(hosts.keys())
+                cursor.execute('SELECT host_object_id, current_state, output FROM '+self.prefix+'_hoststatus WHERE(host_object_id="'+whereClause+'")')
+            
+                rows = cursor.fetchall()
+                for row in rows:
+    
+                    result = Result(row[1], row[2])
+                    hosts[str(row[0])].setResult(result)
 
 		    # get service list
 		
@@ -171,6 +174,9 @@ class MysqlBackend:
 
 			    service = Service(row[2])
 			    services[str(row[1])] = service
+			    
+			    if isinstance(group, Servicegroup) and str(row[1]) not in group.hostServiceObjectIds[str(row[0])]: continue
+			    
 			    hosts[str(row[0])].addService(service)
 		
 		    # get service results

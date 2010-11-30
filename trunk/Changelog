@@ -1,10 +1,12 @@
 v1.3
 
-- Added standalone option.
+- Enhanced configuration options.
+- Servicegroup support.
+- Added option to run as standalone server.
 
 v1.2
 
-- Parsing nagios files optimized (several seconds => 15ms)  
+- Parsing nagios files optimized (several seconds => 15ms).  
 
 v1.1:
 

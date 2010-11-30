@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from balbec.objects import Host, Hostgroup, Result, Service
+from balbec.objects import Host, Hostgroup, Servicegroup, Result, Service
 
 # file parsing code inspired by matt joyce's nagiocity (http://code.google.com/p/nagiosity).
 
@@ -36,6 +36,7 @@ e.args[1]))
         # parse definitions
        
         self.hostgroupDefinitions = self.parseHostgroups(objectContent)
+        self.servicegroupDefinitions = self.parseServicegroups(objectContent)
         self.hoststatusDefinitions = self.parseHosts(statusContent)
         self.servicestatusDefinitions = self.parseServicestati(statusContent)
         self.lastCheck = self.parseLastcheck(statusContent)
@@ -76,6 +77,18 @@ e.args[1]))
             definitions.append((name, members))
         return definitions
 
+    def parseServicegroups(self, text):
+    
+        pattern = re.compile('define servicegroup \{[\S\s]*?servicegroup_name\s+([\S ]+)\n[\S\s]*?members\s+([\S ]+)\n[\S\s]*?\}', re.DOTALL)
+        
+        definitions = []
+        for match in pattern.finditer(text):
+
+            name = match.group(1)
+            members = match.group(2).split(',')
+            definitions.append((name, members))
+        return definitions
+
     def parseHosts(self, text):
 
         pattern = re.compile('hoststatus'+' \{[\S\s]*?host_name=(\S+)\n[\S\s]*?current_state=(\S+)\n[\S\s]*?plugin_output=([\S ]+)\n[\S\s]*?\}', re.DOTALL) 
@@ -104,6 +117,31 @@ e.args[1]))
             definitions.append((hostname, description, status, output))
         return definitions
 
+    def getServicegroups(self, names):
+    
+        idServicegroupMap = {}
+        
+        for name, members in self.servicegroupDefinitions:
+        
+            if name not in names:
+ 
+                continue
+            idServicegroupMap[name] = Servicegroup(name)
+            
+            hostObjectIds = members[0::2]
+            serviceObjectIds = members[1::2]
+            
+            for hostObjectId, serviceObjectId in zip(hostObjectIds, serviceObjectIds):
+            
+                if hostObjectId not in idServicegroupMap[name].hostObjectIds:
+                
+                    idServicegroupMap[name].addHostObjectId(hostObjectId)
+                    idServicegroupMap[name].hostServiceObjectIds[hostObjectId] = []
+                    
+                idServicegroupMap[name].hostServiceObjectIds[hostObjectId].append(serviceObjectId)       
+
+        return idServicegroupMap.values()
+    
 
     def getHostgroups(self, names):
 
@@ -121,7 +159,7 @@ e.args[1]))
         return idHostgroupMap.values()
 
 
-    def getHosts(self, hostgroup):
+    def getHosts(self, group):
 
         #self.host_counter = self.host_counter + 1
 
@@ -129,7 +167,7 @@ e.args[1]))
 
         for hostname, status, output in self.hoststatusDefinitions:         
  
-            if hostname not in hostgroup.hostObjectIds:
+            if hostname not in group.hostObjectIds:
 
                 continue
 
@@ -139,9 +177,8 @@ e.args[1]))
 
         for hostname, description, status, output in self.servicestatusDefinitions:
 
-            if hostname not in hostgroup.hostObjectIds:
-
-                continue
+            if hostname not in group.hostObjectIds: continue
+            if isinstance(group, Servicegroup) and description not in group.hostServiceObjectIds[hostname]: continue
             
             host = Host(hostname)
 

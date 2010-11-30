@@ -30,6 +30,7 @@
 		        <hostgroup show="false">infrastructure_misc</hostgroup>
 		    </and>
         </or>
+        <servicegroup>hd space</servicegroup>
 	</map>
 	<map name="demo">
 		<hostgroup>cabinet-7</hostgroup>
