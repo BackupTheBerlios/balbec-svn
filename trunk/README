@@ -25,7 +25,9 @@ Installation:
 
  - Move all files and directories to "/opt/balbec".	
  - Create a "balbec" link to the "src/" directory ("ln -s /opt/balbec/src /opt/balbec/balbec").
- - Run "server.py" in "/opt/balbec" ("cd /opt/balbec && python /opt/balbec/server.py").
+ - Run "server.py" in "/opt/balbec" ("cd /opt/balbec && python /opt/balbec/server.py"). The
+   default port for the server is 8100. To make the server listen on another port use the "-p"
+   switch.
 
 - Apache:
 
@@ -74,6 +76,4 @@ Show all hosts in hostgroups "Level 1" and "Level 2" which appear in hostgroup "
 Usage:
 
 Use the browser to view the maps in html ("Accept: text/html" in the header) or use xml for further 
-processing: "curl -s http://balbec". The standalone version is running on port 8100 
-("http://balbec:8100") by default. You can edit the "PORT" variable in "server.py" to modify the 
-port.
+processing: "curl -s http://balbec".

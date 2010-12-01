@@ -1,7 +1,6 @@
 v1.3
 
 - stylesheet for old config conversion
-- getopt for setting a port
 - init script
 - servicegroup support in mysql backend
 

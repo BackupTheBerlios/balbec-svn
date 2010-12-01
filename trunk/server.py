@@ -45,14 +45,24 @@ class BalbecServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             print e
             self.send_response(503, 'Service Unavailable')
 
-handler = BalbecServer
+try:
+
+    if len(sys.argv) != 1 and len(sys.argv) != 3 and sys.argv[1] != '-p': raise Exception
+    PORT = int(sys.argv[2])
+except Exception:
+
+    print 'syntax: server.py [-p portnumber]'
+    sys.exit(1) 
+
+
+server = BalbecServer
 
 #handler = XmlHandler(CWD)
 #output = handler.xml() 
 
 try:
 
-    httpd = SocketServer.TCPServer(("", PORT), handler)
+    httpd = SocketServer.TCPServer(("", PORT), server)
     
     def signal_handler(signal, frame):
 
