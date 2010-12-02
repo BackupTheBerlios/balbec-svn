@@ -8,13 +8,6 @@
         </xsd:sequence>
     </xsd:complexType>
 
-    <xsd:simpleType name="version_number">
-        <xsd:restriction base="xsd:integer">
-            <xsd:minInclusive value="1"/>
-            <xsd:maxInclusive value="1"/>
-        </xsd:restriction>
-    </xsd:simpleType>
-
     <xsd:complexType name="ndo2db">
         <xsd:sequence>
             <xsd:element name="database" type="xsd:string" minOccurs="0"/>
@@ -35,27 +28,14 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-    <xsd:complexType name="group" mixed="true">
-        <xsd:attribute name="show" type="xsd:string"/>
-    </xsd:complexType>
-
-    <xsd:complexType name="objects_and_operators">
-        <xsd:choice maxOccurs="unbounded" minOccurs="1">
-            <xsd:element name="hostgroup" type="group"/>
-            <xsd:element name="servicegroup" type="group"/>
-            <xsd:element name="and" type="objects_and_operators"/>
-            <xsd:element name="not" type="objects_and_operators"/>
-            <xsd:element name="or" type="objects_and_operators"/>
-        </xsd:choice>
+    <xsd:complexType name="filter" mixed="true">
+        <xsd:attribute name="revert" type="xsd:string"/>
     </xsd:complexType>
 
     <xsd:complexType name="map">
         <xsd:choice maxOccurs="unbounded" minOccurs="1">
-            <xsd:element name="hostgroup" type="group"/>
-            <xsd:element name="servicegroup" type="group"/>
-            <xsd:element name="and" type="objects_and_operators"/>
-            <xsd:element name="not" type="objects_and_operators"/>
-            <xsd:element name="or" type="objects_and_operators"/>
+            <xsd:element name="hostgroup" type="xsd:string"/>
+            <xsd:element name="filter" type="filter"/>
         </xsd:choice>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
     </xsd:complexType>
@@ -66,7 +46,6 @@
                 <xsd:element name="nagios" type="nagios"/>
                 <xsd:element name="map" type="map" minOccurs="1" maxOccurs="unbounded"/>
             </xsd:sequence>
-             <xsd:attribute name="config_version" type="version_number"/>
         </xsd:complexType>
     </xsd:element>
 </xsd:schema>

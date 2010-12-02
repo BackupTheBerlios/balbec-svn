@@ -47,11 +47,13 @@ class BalbecServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 try:
 
-    if len(sys.argv) != 1 and len(sys.argv) != 3 and sys.argv[1] != '-p': raise Exception
-    PORT = int(sys.argv[2])
+    if len(sys.argv) != 1:
+
+        if len(sys.argv) != 3 or sys.argv[1] != '-p': raise Exception
+        PORT = int(sys.argv[2])
 except Exception:
 
-    print 'syntax: server.py [-p portnumber]'
+    print 'syntax: '+sys.argv[0]+' [-p portnumber]'
     sys.exit(1) 
 
 

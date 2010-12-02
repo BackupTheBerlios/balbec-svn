@@ -38,11 +38,25 @@ class XmlHandler:
             doc = etree.parse(configFile)
             schema.assertValid(doc)
         except etree.XMLSyntaxError, e:
-            
+           
             raise Exception('Invalid Config file: "'+str(e)+'"')
         except etree.DocumentInvalid, e:
 
-            raise Exception('Invalid Config file: "'+str(e)+'"')
+            schemaFile = open(self.documentRoot+'/schema/old_config.xsd', 'r')
+            schemaDoc = etree.parse(schemaFile)
+            schema = etree.XMLSchema(schemaDoc)
+
+            try: 
+
+                schema.assertValid(doc)
+
+                stylesheetFile = open(self.documentRoot+'/xslt/old_config.xsl', 'r')
+                stylesheetDoc = etree.parse(stylesheetFile)
+                stylesheet = etree.XSLT(stylesheetDoc)
+                doc = stylesheet(doc)
+            except:
+
+                raise Exception('Invalid Config file: "'+str(e)+'"')
 
         mysqlNodes = doc.xpath("/balbec/nagios/ndo2db")
         if len(mysqlNodes) == 1:

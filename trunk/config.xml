@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<balbec>
+<balbec config_version="1">
 	<nagios>
         <!-- define either ndo2db *or* nagios files as data source -->
 	    <!--<ndo2db>
