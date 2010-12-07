@@ -25,9 +25,22 @@ Installation:
 
  - Move all files and directories to "/opt/balbec".	
  - Create a "balbec" link to the "src/" directory ("ln -s /opt/balbec/src /opt/balbec/balbec").
- - Run "server.py" in "/opt/balbec" ("cd /opt/balbec && python /opt/balbec/server.py"). The
-   default port for the server is 8100. To make the server listen on another port use the "-p"
+ - Ensure the "balbec-server.py" script is executable ("chmod +x /opt/balbec/balbec-server.py").
+ - Run "balbec-server.py" in "/opt/balbec" ("cd /opt/balbec && python /opt/balbec/balbec-server.py"). 
+   The default port for the server is 8100. To make the server listen on another port use the "-p"
    switch.
+ - Also you can use the included init script:
+
+   cd /opt/balbec
+   cp init-script.sh /etc/init.d/balbec
+   chmod +x /etc/init.d/balbec
+   chkconfig balbec on
+   service balbec start
+
+- If you want to configure the port for the init script add a file "/etc/sysconfig/balbec" and
+  set the "BALBEC_PORT" variable there:
+
+  echo "BALBEC_PORT=8102" > /etc/sysconfig/balbec
 
 - Apache:
 
@@ -77,3 +90,13 @@ Usage:
 
 Use the browser to view the maps in html ("Accept: text/html" in the header) or use xml for further 
 processing: "curl -s http://balbec".
+
+Legacy configuration:
+
+Legacy "config.xml" files (pre v1.3) are supported. Also you can convert them to the new format by 
+running the supplied "update-config.py" script:
+
+cd /opt/balbec
+python ./update-config.py xslt/old_config.xsl my_old_config.xml > my_new_config.xml
+
+
