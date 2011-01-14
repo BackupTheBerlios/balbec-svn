@@ -1,3 +1,7 @@
+v1.4
+
+- Added mk livestatus as backend option.
+
 v1.3
 
 - Enhanced configuration options.

@@ -1,8 +1,8 @@
-lbec
+Balbec
 
 Nagios visualization tool.
 
-2010 Magnus Kulke
+2011 Magnus Kulke
 
 Requirements:
 
@@ -59,6 +59,20 @@ Installation:
 Configuration:
 
 - The configuration is defined as xml in "/opt/balbec/config.xml".
+- Notes for the mk livestatus support 
+  (http://mathias-kettner.de/checkmk_livestatus.html):
+  The livestatus socket is created with 0660 rights, with nagios user and group
+  id. Your webserver/balbec might not be allowed to use the socket. A solution
+  is to create a special dir for the socket, owned by the group of your 
+  webserver/balbec and by the nagios user and then set the setgid bit on it 
+  (the livestatus documentation mentions the sticky bit, but this is wrong).
+
+  mkdir livestatus
+  chown nagios:www livestatus
+  chmod +s livestatus
+  
+  The socket, when created within that dir, is created with the 
+  balbec/webserver group id and balbec can use it.
 - There is an example config file included in the distribution.
 - The configuration consists of at least one map holding a combination of 
   several host- or servicegroups.

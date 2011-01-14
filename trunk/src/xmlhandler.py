@@ -59,6 +59,8 @@ class XmlHandler:
                 raise Exception('Invalid Config file: "'+str(e)+'"')
 
         mysqlNodes = doc.xpath("/balbec/nagios/ndo2db")
+        filesNodes = doc.xpath("/balbec/nagios/files")
+        livestatusNodes = doc.xpath("/balbec/nagios/livestatus")
         if len(mysqlNodes) == 1:
 
             from balbec.mysqlbackend import MysqlBackend
@@ -90,7 +92,7 @@ class XmlHandler:
 
             mysql.connect()
             backend = mysql
-        else:
+        elif len(filesNodes) == 1:
 
             from balbec.filebackend import FileBackend
 
@@ -98,6 +100,12 @@ class XmlHandler:
             statusFilename = doc.xpath("/balbec/nagios/files/status_file")[0].text     
 
             backend = FileBackend(objectFilename, statusFilename)
+        elif len(livestatusNodes) == 1:
+
+            from balbec.livestatusbackend import LivestatusBackend
+
+            socketPath = doc.xpath("/balbec/nagios/livestatus/socket_path")[0].text
+            backend = LivestatusBackend(socketPath)
 
         mapNames = []
         mapNodes = doc.xpath("/balbec/map")
